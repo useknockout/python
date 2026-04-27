@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "useknockout"
-version = "0.0.2"
+version = "0.0.3"
 description = "Python SDK for useknockout — state-of-the-art background removal API."
 readme = "README.md"
 license = { text = "MIT" }
