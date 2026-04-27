@@ -352,3 +352,45 @@ class Knockout:
             "/estimate",
             json={"endpoint": endpoint, "width": width, "height": height},
         )
+
+    def upscale(
+        self,
+        file: FileInput,
+        *,
+        scale: int = 4,
+        face_enhance: bool = False,
+        format: str = "png",
+    ) -> bytes:
+        """POST /upscale — Real-ESRGAN x2/x4 super-resolution.
+
+        ``face_enhance=True`` routes through GFPGAN for sharper facial detail
+        (slower; use for portraits).
+        """
+        if scale not in (2, 4):
+            raise ValueError("scale must be 2 or 4")
+        return self._request_bytes(
+            "POST",
+            "/upscale",
+            files=_multipart_files(file),
+            data=_form({"scale": scale, "face_enhance": face_enhance, "format": format}),
+        )
+
+    def face_restore(
+        self,
+        file: FileInput,
+        *,
+        only_center_face: bool = False,
+        format: str = "png",
+    ) -> bytes:
+        """POST /face-restore — GFPGAN v1.4 portrait restoration.
+
+        Fixes blurry / damaged / low-res faces; background is 2x upscaled by
+        Real-ESRGAN. ``only_center_face=True`` restores just the most prominent
+        face (faster).
+        """
+        return self._request_bytes(
+            "POST",
+            "/face-restore",
+            files=_multipart_files(file),
+            data=_form({"only_center_face": only_center_face, "format": format}),
+        )

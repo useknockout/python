@@ -323,3 +323,34 @@ class AsyncKnockout:
             "/estimate",
             json={"endpoint": endpoint, "width": width, "height": height},
         )
+
+    async def upscale(
+        self,
+        file: FileInput,
+        *,
+        scale: int = 4,
+        face_enhance: bool = False,
+        format: str = "png",
+    ) -> bytes:
+        if scale not in (2, 4):
+            raise ValueError("scale must be 2 or 4")
+        return await self._request_bytes(
+            "POST",
+            "/upscale",
+            files=_multipart_files(file),
+            data=_form({"scale": scale, "face_enhance": face_enhance, "format": format}),
+        )
+
+    async def face_restore(
+        self,
+        file: FileInput,
+        *,
+        only_center_face: bool = False,
+        format: str = "png",
+    ) -> bytes:
+        return await self._request_bytes(
+            "POST",
+            "/face-restore",
+            files=_multipart_files(file),
+            data=_form({"only_center_face": only_center_face, "format": format}),
+        )
