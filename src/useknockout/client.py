@@ -358,21 +358,30 @@ class Knockout:
         file: FileInput,
         *,
         scale: int = 4,
+        model: str = "swin2sr",
         face_enhance: bool = False,
         format: str = "png",
     ) -> bytes:
-        """POST /upscale — Real-ESRGAN x2/x4 super-resolution.
+        """POST /upscale — 2x/4x super-resolution.
 
-        ``face_enhance=True`` routes through GFPGAN for sharper facial detail
-        (slower; use for portraits).
+        ``model="swin2sr"`` (default, v0.6.0+) is sharper on real photos.
+        ``model="realesrgan"`` is the legacy backend — better on anime / illustrations.
+        ``face_enhance=True`` routes through GFPGAN (Real-ESRGAN backend).
         """
         if scale not in (2, 4):
             raise ValueError("scale must be 2 or 4")
+        if model not in ("swin2sr", "realesrgan"):
+            raise ValueError("model must be 'swin2sr' or 'realesrgan'")
         return self._request_bytes(
             "POST",
             "/upscale",
             files=_multipart_files(file),
-            data=_form({"scale": scale, "face_enhance": face_enhance, "format": format}),
+            data=_form({
+                "scale": scale,
+                "model": model,
+                "face_enhance": face_enhance,
+                "format": format,
+            }),
         )
 
     def face_restore(
