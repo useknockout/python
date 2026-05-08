@@ -403,3 +403,25 @@ class Knockout:
             files=_multipart_files(file),
             data=_form({"only_center_face": only_center_face, "format": format}),
         )
+
+    def colorize(
+        self,
+        file: FileInput,
+        *,
+        format: str = "png",
+    ) -> bytes:
+        """POST /colorize — DDColor (Apache-2.0) image colorization.
+
+        Predicts plausible color from grayscale luminance via a ConvNeXt-Large
+        backbone (single feed-forward, ~500ms warm). Works on B&W or color
+        input — color images are converted to grayscale internally before
+        prediction, which makes round-trip recoloring straightforward.
+
+        Added in v0.1.0; requires API ≥ v0.7.0.
+        """
+        return self._request_bytes(
+            "POST",
+            "/colorize",
+            files=_multipart_files(file),
+            data=_form({"format": format}),
+        )

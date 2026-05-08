@@ -362,3 +362,17 @@ class AsyncKnockout:
             files=_multipart_files(file),
             data=_form({"only_center_face": only_center_face, "format": format}),
         )
+
+    async def colorize(
+        self,
+        file: FileInput,
+        *,
+        format: str = "png",
+    ) -> bytes:
+        """POST /colorize — DDColor (Apache-2.0) image colorization. Async."""
+        return await self._request_bytes(
+            "POST",
+            "/colorize",
+            files=_multipart_files(file),
+            data=_form({"format": format}),
+        )
