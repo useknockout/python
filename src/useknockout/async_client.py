@@ -376,3 +376,23 @@ class AsyncKnockout:
             files=_multipart_files(file),
             data=_form({"format": format}),
         )
+
+    async def silhouette(
+        self,
+        file: FileInput,
+        *,
+        subject_color: str = "#7C3AED",
+        bg_color: str = "#FFFFFF",
+        format: str = "png",
+    ) -> bytes:
+        """POST /silhouette — two-tone silhouette portrait. Async."""
+        return await self._request_bytes(
+            "POST",
+            "/silhouette",
+            files=_multipart_files(file),
+            data=_form({
+                "subject_color": subject_color,
+                "bg_color": bg_color,
+                "format": format,
+            }),
+        )

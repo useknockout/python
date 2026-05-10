@@ -425,3 +425,30 @@ class Knockout:
             files=_multipart_files(file),
             data=_form({"format": format}),
         )
+
+    def silhouette(
+        self,
+        file: FileInput,
+        *,
+        subject_color: str = "#7C3AED",
+        bg_color: str = "#FFFFFF",
+        format: str = "png",
+    ) -> bytes:
+        """POST /silhouette — two-tone silhouette portrait.
+
+        Subject filled with one solid color, background filled with another.
+        Apple Music / Spotify avatar style. Reuses BiRefNet's mask path; no
+        new model load.
+
+        Added in v0.1.1; requires API ≥ v0.7.1.
+        """
+        return self._request_bytes(
+            "POST",
+            "/silhouette",
+            files=_multipart_files(file),
+            data=_form({
+                "subject_color": subject_color,
+                "bg_color": bg_color,
+                "format": format,
+            }),
+        )
