@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
 
@@ -14,6 +14,7 @@ from useknockout._helpers import (
     _multipart_batch,
     _multipart_files,
     _resolve_token,
+    _to_bytes_and_name,
 )
 from useknockout._version import __version__
 from useknockout.errors import KnockoutError, raise_for_status
@@ -451,4 +452,40 @@ class Knockout:
                 "bg_color": bg_color,
                 "format": format,
             }),
+        )
+
+    def inpaint(
+        self,
+        file: FileInput,
+        *,
+        mask: Optional[FileInput] = None,
+        bbox: Optional[Tuple[int, int, int, int]] = None,
+        dilation: int = 8,
+        format: str = "png",
+    ) -> bytes:
+        """POST /inpaint — LaMa-based image inpainting.
+
+        Three auto-detected modes:
+          - ``mask`` provided           → user-supplied mask
+          - ``bbox=(x, y, w, h)``       → rectangular region
+          - neither                     → auto-subject (BiRefNet, inverted)
+
+        ``dilation`` (0..32, default 8) expands the mask before LaMa runs
+        to reduce ghost outlines.
+
+        Added in v0.2.0; requires API ≥ v0.8.0.
+        """
+        files = _multipart_files(file)
+        if mask is not None:
+            mdata, mname = _to_bytes_and_name(mask, default_name="mask.png")
+            files.append(("mask", (mname, mdata, "application/octet-stream")))
+        data = {"dilation": str(int(dilation)), "format": format}
+        if bbox is not None:
+            x, y, w, h = bbox
+            data.update({"x": str(int(x)), "y": str(int(y)), "w": str(int(w)), "h": str(int(h))})
+        return self._request_bytes(
+            "POST",
+            "/inpaint",
+            files=files,
+            data=_form(data),
         )
