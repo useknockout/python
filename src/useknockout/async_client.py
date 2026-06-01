@@ -250,6 +250,7 @@ class AsyncKnockout:
         aspect: str = "1:1",
         padding: int = 48,
         shadow: bool = True,
+        transparent: bool = False,
         format: str = "jpg",
     ) -> bytes:
         return await self._request_bytes(
@@ -262,6 +263,7 @@ class AsyncKnockout:
                     "aspect": aspect,
                     "padding": padding,
                     "shadow": shadow,
+                    "transparent": transparent,
                     "format": format,
                 }
             ),

@@ -274,9 +274,14 @@ class Knockout:
         aspect: str = "1:1",
         padding: int = 48,
         shadow: bool = True,
+        transparent: bool = False,
         format: str = "jpg",
     ) -> bytes:
-        """POST /studio-shot — e-commerce preset (cutout + crop + center + shadow)."""
+        """POST /studio-shot — e-commerce preset (cutout + crop + center + shadow).
+
+        Set ``transparent=True`` to keep a transparent background (bg_color and
+        shadow are ignored; output is PNG, jpg is coerced).
+        """
         return self._request_bytes(
             "POST",
             "/studio-shot",
@@ -287,6 +292,7 @@ class Knockout:
                     "aspect": aspect,
                     "padding": padding,
                     "shadow": shadow,
+                    "transparent": transparent,
                     "format": format,
                 }
             ),

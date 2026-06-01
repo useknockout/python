@@ -96,6 +96,7 @@ c.outline("photo.jpg", outline_color="#000000", outline_width=4)
 
 # Presets
 c.studio_shot("photo.jpg", aspect="1:1", shadow=True)  # e-commerce
+c.studio_shot("photo.jpg", transparent=True)           # transparent bg (PNG)
 c.headshot("photo.jpg", bg_color="#FFFFFF")            # LinkedIn 4:5 portrait
 c.headshot("photo.jpg", bg_blur=True, blur_radius=24)  # blurred original bg
 
