@@ -65,9 +65,12 @@ class AsyncKnockout:
         files=None,
         data=None,
         json=None,
+        params=None,
     ) -> bytes:
         try:
-            r = await self._http.request(method, path, files=files, data=data, json=json)
+            r = await self._http.request(
+                method, path, files=files, data=data, json=json, params=params
+            )
         except httpx.RequestError as e:
             raise KnockoutError(f"network error: {e}", code="unknown") from e
         if r.status_code >= 400:
@@ -82,9 +85,12 @@ class AsyncKnockout:
         files=None,
         data=None,
         json=None,
+        params=None,
     ) -> Any:
         try:
-            r = await self._http.request(method, path, files=files, data=data, json=json)
+            r = await self._http.request(
+                method, path, files=files, data=data, json=json, params=params
+            )
         except httpx.RequestError as e:
             raise KnockoutError(f"network error: {e}", code="unknown") from e
         if r.status_code >= 400:
@@ -101,11 +107,12 @@ class AsyncKnockout:
         return await self._request_json("GET", "/stats")
 
     async def remove(self, file: FileInput, *, format: str = "png") -> bytes:
+        # /remove reads `format` as a QUERY param (bare default in the API).
         return await self._request_bytes(
             "POST",
             "/remove",
             files=_multipart_files(file),
-            data=_form({"format": format}),
+            params={"format": format},
         )
 
     async def remove_url(self, url: str, *, format: str = "png") -> bytes:
@@ -138,11 +145,12 @@ class AsyncKnockout:
     ) -> Dict[str, Any]:
         if len(files) > 10:
             raise ValueError("max 10 files per batch")
+        # /remove-batch reads `format` as a QUERY param (bare default in the API).
         return await self._request_json(
             "POST",
             "/remove-batch",
             files=_multipart_batch(files),
-            data=_form({"format": format}),
+            params={"format": format},
         )
 
     async def remove_batch_url(self, urls: List[str], *, format: str = "png") -> Dict[str, Any]:
@@ -357,13 +365,20 @@ class AsyncKnockout:
         file: FileInput,
         *,
         only_center_face: bool = False,
+        bg_enhance: bool = False,
         format: str = "png",
     ) -> bytes:
         return await self._request_bytes(
             "POST",
             "/face-restore",
             files=_multipart_files(file),
-            data=_form({"only_center_face": only_center_face, "format": format}),
+            data=_form(
+                {
+                    "only_center_face": only_center_face,
+                    "bg_enhance": bg_enhance,
+                    "format": format,
+                }
+            ),
         )
 
     async def colorize(

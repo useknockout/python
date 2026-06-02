@@ -75,9 +75,12 @@ class Knockout:
         files=None,
         data=None,
         json=None,
+        params=None,
     ) -> bytes:
         try:
-            r = self._http.request(method, path, files=files, data=data, json=json)
+            r = self._http.request(
+                method, path, files=files, data=data, json=json, params=params
+            )
         except httpx.RequestError as e:
             raise KnockoutError(f"network error: {e}", code="unknown") from e
         if r.status_code >= 400:
@@ -92,9 +95,12 @@ class Knockout:
         files=None,
         data=None,
         json=None,
+        params=None,
     ) -> Any:
         try:
-            r = self._http.request(method, path, files=files, data=data, json=json)
+            r = self._http.request(
+                method, path, files=files, data=data, json=json, params=params
+            )
         except httpx.RequestError as e:
             raise KnockoutError(f"network error: {e}", code="unknown") from e
         if r.status_code >= 400:
@@ -116,11 +122,13 @@ class Knockout:
 
     def remove(self, file: FileInput, *, format: str = "png") -> bytes:
         """POST /remove — remove background, return transparent PNG/WebP bytes."""
+        # /remove reads `format` as a QUERY param (bare default in the API), unlike
+        # the Form()-based endpoints. Sending it in the body would be ignored.
         return self._request_bytes(
             "POST",
             "/remove",
             files=_multipart_files(file),
-            data=_form({"format": format}),
+            params={"format": format},
         )
 
     def remove_url(self, url: str, *, format: str = "png") -> bytes:
@@ -156,11 +164,12 @@ class Knockout:
         """POST /remove-batch — up to 10 multipart uploads in one call."""
         if len(files) > 10:
             raise ValueError("max 10 files per batch")
+        # /remove-batch reads `format` as a QUERY param (bare default in the API).
         return self._request_json(
             "POST",
             "/remove-batch",
             files=_multipart_batch(files),
-            data=_form({"format": format}),
+            params={"format": format},
         )
 
     def remove_batch_url(self, urls: List[str], *, format: str = "png") -> Dict[str, Any]:
@@ -396,11 +405,13 @@ class Knockout:
         file: FileInput,
         *,
         only_center_face: bool = False,
+        bg_enhance: bool = False,
         format: str = "png",
     ) -> bytes:
         """POST /face-restore — GFPGAN v1.4 portrait restoration.
 
-        Fixes blurry / damaged / low-res faces; background is 2x upscaled by
+        Fixes blurry / damaged / low-res faces. By default the background is
+        preserved as-is. ``bg_enhance=True`` also upscales the background 2x via
         Real-ESRGAN. ``only_center_face=True`` restores just the most prominent
         face (faster).
         """
@@ -408,7 +419,13 @@ class Knockout:
             "POST",
             "/face-restore",
             files=_multipart_files(file),
-            data=_form({"only_center_face": only_center_face, "format": format}),
+            data=_form(
+                {
+                    "only_center_face": only_center_face,
+                    "bg_enhance": bg_enhance,
+                    "format": format,
+                }
+            ),
         )
 
     def colorize(
