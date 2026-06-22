@@ -259,6 +259,8 @@ class AsyncKnockout:
         padding: int = 48,
         shadow: bool = True,
         transparent: bool = False,
+        enhance: bool = False,
+        enhance_strength: float = 0.15,
         format: str = "jpg",
     ) -> bytes:
         return await self._request_bytes(
@@ -272,6 +274,8 @@ class AsyncKnockout:
                     "padding": padding,
                     "shadow": shadow,
                     "transparent": transparent,
+                    "enhance": enhance,
+                    "enhance_strength": enhance_strength,
                     "format": format,
                 }
             ),

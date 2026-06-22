@@ -284,12 +284,18 @@ class Knockout:
         padding: int = 48,
         shadow: bool = True,
         transparent: bool = False,
+        enhance: bool = False,
+        enhance_strength: float = 0.15,
         format: str = "jpg",
     ) -> bytes:
         """POST /studio-shot — e-commerce preset (cutout + crop + center + shadow).
 
         Set ``transparent=True`` to keep a transparent background (bg_color and
         shadow are ignored; output is PNG, jpg is coerced).
+
+        Set ``enhance=True`` for a subtle brightness + saturation lift on the
+        subject (ecommerce-ready). ``enhance_strength`` (0.0-0.5, default 0.15)
+        controls the amount and only applies when ``enhance`` is True.
         """
         return self._request_bytes(
             "POST",
@@ -302,6 +308,8 @@ class Knockout:
                     "padding": padding,
                     "shadow": shadow,
                     "transparent": transparent,
+                    "enhance": enhance,
+                    "enhance_strength": enhance_strength,
                     "format": format,
                 }
             ),
