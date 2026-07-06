@@ -76,11 +76,13 @@ class Knockout:
         data=None,
         json=None,
         params=None,
+        timeout=None,
     ) -> bytes:
         try:
-            r = self._http.request(
-                method, path, files=files, data=data, json=json, params=params
-            )
+            kwargs = {"files": files, "data": data, "json": json, "params": params}
+            if timeout is not None:
+                kwargs["timeout"] = timeout
+            r = self._http.request(method, path, **kwargs)
         except httpx.RequestError as e:
             raise KnockoutError(f"network error: {e}", code="unknown") from e
         if r.status_code >= 400:
@@ -313,6 +315,46 @@ class Knockout:
                     "format": format,
                 }
             ),
+        )
+
+    def collage(
+        self,
+        files: List[FileInput],
+        *,
+        main_index: int = 0,
+        main_position: str = "BR",
+        bg_color: str = "#FFFFFF",
+        aspect: str = "1:1",
+        padding: int = 24,
+        format: str = "jpg",
+    ) -> bytes:
+        """POST /collage — lay 2-9 background-removed photos around a main image.
+
+        ``main_index`` picks the hero (0-based); ``main_position`` anchors it
+        (TL, T, TR, L, C, R, BL, B, BR).
+
+        Paid tiers only. Billed at N base-image units (each photo is a full
+        model pass), so 9 photos = 9x your per-image price.
+        """
+        if not 2 <= len(files) <= 9:
+            raise ValueError("collage requires 2-9 files")
+        # N model passes + possible cold start easily exceeds the 60s single-image
+        # default; scale the ceiling by file count.
+        return self._request_bytes(
+            "POST",
+            "/collage",
+            files=_multipart_batch(files),
+            data=_form(
+                {
+                    "main_index": main_index,
+                    "main_position": main_position,
+                    "bg_color": bg_color,
+                    "aspect": aspect,
+                    "padding": padding,
+                    "format": format,
+                }
+            ),
+            timeout=45.0 + len(files) * 20.0,
         )
 
     def compare(self, file: FileInput, *, format: str = "png") -> bytes:
