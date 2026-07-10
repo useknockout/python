@@ -98,11 +98,13 @@ class Knockout:
         data=None,
         json=None,
         params=None,
+        timeout=None,
     ) -> Any:
         try:
-            r = self._http.request(
-                method, path, files=files, data=data, json=json, params=params
-            )
+            kwargs = {"files": files, "data": data, "json": json, "params": params}
+            if timeout is not None:
+                kwargs["timeout"] = timeout
+            r = self._http.request(method, path, **kwargs)
         except httpx.RequestError as e:
             raise KnockoutError(f"network error: {e}", code="unknown") from e
         if r.status_code >= 400:
@@ -356,6 +358,60 @@ class Knockout:
             ),
             timeout=45.0 + len(files) * 20.0,
         )
+
+    def video_remove(
+        self,
+        file: FileInput,
+        *,
+        format: str = "prores4444",
+        bg_color: Optional[str] = None,
+        smoothing: int = 30,
+    ) -> Dict[str, Any]:
+        """POST /video/remove — async video background removal. Returns the job
+        dict immediately ({job_id, status, seconds, ...}); poll with get_job()
+        or use video_remove_and_wait().
+
+        format: 'prores4444' (MOV, real 10-bit alpha), 'webm' (VP9 alpha), or
+        'mp4' (H.264 — requires bg_color). Paid tiers only, $0.05 per output
+        second, billed on success. Caps: 30s clip, 30fps, 200MB.
+        """
+        return self._request_json(
+            "POST",
+            "/video/remove",
+            files=_multipart_files(file),
+            data=_form({"format": format, "bg_color": bg_color, "smoothing": smoothing}),
+            timeout=300.0,  # uploads up to 200MB + server-side probe
+        )
+
+    def get_job(self, job_id: str) -> Dict[str, Any]:
+        """GET /jobs/{job_id} — poll a video job once."""
+        return self._request_json("GET", f"/jobs/{job_id}")
+
+    def video_remove_and_wait(
+        self,
+        file: FileInput,
+        *,
+        format: str = "prores4444",
+        bg_color: Optional[str] = None,
+        smoothing: int = 30,
+        poll_interval: float = 5.0,
+        timeout: float = 900.0,
+    ) -> Dict[str, Any]:
+        """Submit a video and block until it finishes. Returns the final job
+        dict (status 'done', result_url set). Raises KnockoutError on job
+        failure or wait timeout."""
+        import time as _time
+
+        job = self.video_remove(file, format=format, bg_color=bg_color, smoothing=smoothing)
+        deadline = _time.monotonic() + timeout
+        while job.get("status") in ("queued", "processing"):
+            if _time.monotonic() > deadline:
+                raise KnockoutError(f"video job {job.get('job_id')} still running after {timeout}s", code="timeout")
+            _time.sleep(poll_interval)
+            job = self.get_job(job["job_id"])
+        if job.get("status") == "error":
+            raise KnockoutError(f"video job {job.get('job_id')} failed: {job.get('error')}", code="job_error")
+        return job
 
     def compare(self, file: FileInput, *, format: str = "png") -> bytes:
         """POST /compare — side-by-side before/after image."""
