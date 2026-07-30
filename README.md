@@ -12,6 +12,7 @@ type: readme
 [![PyPI](https://img.shields.io/pypi/v/useknockout.svg)](https://pypi.org/project/useknockout/)
 [![Python](https://img.shields.io/pypi/pyversions/useknockout.svg)](https://pypi.org/project/useknockout/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/useknockout?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/useknockout)
 
 [Website](https://useknockout.com) ·
 [API repo](https://github.com/useknockout/api) ·
