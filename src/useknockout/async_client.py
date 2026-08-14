@@ -110,20 +110,47 @@ class AsyncKnockout:
     async def stats(self) -> Dict[str, Any]:
         return await self._request_json("GET", "/stats")
 
-    async def remove(self, file: FileInput, *, format: str = "png") -> bytes:
-        # /remove reads `format` as a QUERY param (bare default in the API).
+    async def remove(
+        self,
+        file: FileInput,
+        *,
+        format: str = "png",
+        edge: str = "soft",
+        detect: str = "standard",
+        decontaminate: bool = False,
+    ) -> bytes:
+        # All params are Form fields — they must ride in the multipart body.
         return await self._request_bytes(
             "POST",
             "/remove",
             files=_multipart_files(file),
-            params={"format": format},
+            data=_form({
+                "format": format,
+                "edge": edge,
+                "detect": detect,
+                "decontaminate": decontaminate,
+            }),
         )
 
-    async def remove_url(self, url: str, *, format: str = "png") -> bytes:
+    async def remove_url(
+        self,
+        url: str,
+        *,
+        format: str = "png",
+        edge: str = "soft",
+        detect: str = "standard",
+        decontaminate: bool = False,
+    ) -> bytes:
         return await self._request_bytes(
             "POST",
             "/remove-url",
-            json={"url": url, "format": format},
+            json={
+                "url": url,
+                "format": format,
+                "edge": edge,
+                "detect": detect,
+                "decontaminate": decontaminate,
+            },
         )
 
     async def replace_background(
@@ -181,12 +208,20 @@ class AsyncKnockout:
         padding: int = 24,
         transparent: bool = True,
         format: str = "png",
+        detect: str = "standard",
+        decontaminate: bool = False,
     ) -> bytes:
         return await self._request_bytes(
             "POST",
             "/smart-crop",
             files=_multipart_files(file),
-            data=_form({"padding": padding, "transparent": transparent, "format": format}),
+            data=_form({
+                "padding": padding,
+                "transparent": transparent,
+                "format": format,
+                "detect": detect,
+                "decontaminate": decontaminate,
+            }),
         )
 
     async def shadow(
@@ -266,6 +301,8 @@ class AsyncKnockout:
         enhance: bool = False,
         enhance_strength: float = 0.15,
         format: str = "jpg",
+        detect: str = "standard",
+        decontaminate: bool = False,
     ) -> bytes:
         return await self._request_bytes(
             "POST",
@@ -281,6 +318,8 @@ class AsyncKnockout:
                     "enhance": enhance,
                     "enhance_strength": enhance_strength,
                     "format": format,
+                    "detect": detect,
+                    "decontaminate": decontaminate,
                 }
             ),
         )

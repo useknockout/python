@@ -124,23 +124,58 @@ class Knockout:
         """GET /stats — public usage counter (total + today + last 7 days)."""
         return self._request_json("GET", "/stats")
 
-    def remove(self, file: FileInput, *, format: str = "png") -> bytes:
-        """POST /remove — remove background, return transparent PNG/WebP bytes."""
-        # /remove reads `format` as a QUERY param (bare default in the API), unlike
-        # the Form()-based endpoints. Sending it in the body would be ignored.
+    def remove(
+        self,
+        file: FileInput,
+        *,
+        format: str = "png",
+        edge: str = "soft",
+        detect: str = "standard",
+        decontaminate: bool = False,
+    ) -> bytes:
+        """POST /remove — remove background, return transparent PNG/WebP bytes.
+
+        edge: "soft" (default) or "hard" — hard commits ambiguous edge pixels
+            for a crisp product cut; keep soft for hair and fur.
+        detect: "standard" (default) or "high_recall" — second pass recovers
+            low-contrast product edges. Paid tiers; roughly 2x latency.
+        decontaminate: remove background-colored contamination at mask edges.
+        """
+        # NOTE: the API reads ALL of these as Form fields — they must go in the
+        # multipart body. (A previous version sent format as a query param,
+        # which the API silently ignored.)
         return self._request_bytes(
             "POST",
             "/remove",
             files=_multipart_files(file),
-            params={"format": format},
+            data=_form({
+                "format": format,
+                "edge": edge,
+                "detect": detect,
+                "decontaminate": decontaminate,
+            }),
         )
 
-    def remove_url(self, url: str, *, format: str = "png") -> bytes:
+    def remove_url(
+        self,
+        url: str,
+        *,
+        format: str = "png",
+        edge: str = "soft",
+        detect: str = "standard",
+        decontaminate: bool = False,
+    ) -> bytes:
         """POST /remove-url — fetch remote image, return transparent PNG/WebP."""
         return self._request_bytes(
             "POST",
             "/remove-url",
-            json={"url": url, "format": format},
+            json={
+                "url": url,
+                "format": format,
+                "edge": edge,
+                "detect": detect,
+                "decontaminate": decontaminate,
+            },
         )
 
     def replace_background(
@@ -202,13 +237,21 @@ class Knockout:
         padding: int = 24,
         transparent: bool = True,
         format: str = "png",
+        detect: str = "standard",
+        decontaminate: bool = False,
     ) -> bytes:
         """POST /smart-crop — crop to subject bbox + padding."""
         return self._request_bytes(
             "POST",
             "/smart-crop",
             files=_multipart_files(file),
-            data=_form({"padding": padding, "transparent": transparent, "format": format}),
+            data=_form({
+                "padding": padding,
+                "transparent": transparent,
+                "format": format,
+                "detect": detect,
+                "decontaminate": decontaminate,
+            }),
         )
 
     def shadow(
@@ -291,6 +334,8 @@ class Knockout:
         enhance: bool = False,
         enhance_strength: float = 0.15,
         format: str = "jpg",
+        detect: str = "standard",
+        decontaminate: bool = False,
     ) -> bytes:
         """POST /studio-shot — e-commerce preset (cutout + crop + center + shadow).
 
@@ -315,6 +360,8 @@ class Knockout:
                     "enhance": enhance,
                     "enhance_strength": enhance_strength,
                     "format": format,
+                    "detect": detect,
+                    "decontaminate": decontaminate,
                 }
             ),
         )
