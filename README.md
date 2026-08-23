@@ -1,7 +1,4 @@
----
-project: projects/useknockout-python
-type: readme
----
+
 
 <div align="center">
 
